@@ -1,0 +1,28 @@
+#!/bin/zsh
+
+# location of dotfiles
+DOTDIR = ~/dotfiles
+
+# dispatch subcommands
+case "$1" in
+  restow)
+    shift
+    for pkg in "$@"; do
+      stow -d "$DOTDIR" -R "$pkg" && echo "Restowed $pkg"
+    done
+    ;;
+  bundle)
+    antidote bundle < ~/.config/zsh/.zsh_plugins.txt > ~/.config/zsh/.zsh_plugins.zsh
+    echo "Plugins bundled"
+    ;;
+  list)
+    echo "dotfile packages:"
+    ls -1 "$DOTDIR"
+    ;;
+  push)
+    git -C "DOTDIR" add .
+    git -C "DOTDIR" commit -m "updated dotfiles"
+    git -C "DOTDIR" push && echo "dotfiles pushed"
+    ;;
+esac
+
