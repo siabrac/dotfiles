@@ -7,13 +7,22 @@ DOTDIR=~/dotfiles
 case "$1" in
   restow)
     shift
+    if [[ $# -eq 0 ]]; then
+      echo "❗ Usage: dot restow <package> [package...]"
+      exit
+    fi
     for pkg in "$@"; do
-      stow -d "$DOTDIR" -R "$pkg" && echo "Restowed $pkg"
+      echo "↻ Restowing $pkg..."
+      if stow -d "$DOTDIR" -R "$pkg"; then
+        echo "✅ Done"
+      else
+        echo "❌ Failed to restow $pkg"
+      fi
     done
     ;;
   bundle)
     antidote bundle < ~/.config/zsh/.zsh_plugins.txt > ~/.config/zsh/.zsh_plugins.zsh
-    echo "Plugins bundled"
+    echo "✅ Plugins bundled"
     ;;
   list)
     echo "dotfile packages:"
@@ -26,7 +35,10 @@ case "$1" in
   push)
     git -C "$DOTDIR" add .
     git -C "$DOTDIR" commit -m "updated dotfiles"
-    git -C "$DOTDIR" push && echo "dotfiles pushed"
+    git -C "$DOTDIR" push && echo "✅ dotfiles pushed"
+    ;;
+  *)
+    echo "Usage: dot {restow|bundle|list|push}"
     ;;
 esac
 
