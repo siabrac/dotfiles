@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # location of dotfiles
-DOTDIR = ~/dotfiles
+DOTDIR=~/dotfiles
 
 # dispatch subcommands
 case "$1" in
@@ -17,12 +17,16 @@ case "$1" in
     ;;
   list)
     echo "dotfile packages:"
-    ls -1 "$DOTDIR"
+    find "$DOTDIR" -mindepth 1 -maxdepth 1 -type d \
+      ! -name ".git" \
+      ! -name "bin" \
+      ! -name ".github" \
+      -exec basename {} \;
     ;;
   push)
-    git -C "DOTDIR" add .
-    git -C "DOTDIR" commit -m "updated dotfiles"
-    git -C "DOTDIR" push && echo "dotfiles pushed"
+    git -C "$DOTDIR" add .
+    git -C "$DOTDIR" commit -m "updated dotfiles"
+    git -C "$DOTDIR" push && echo "dotfiles pushed"
     ;;
 esac
 
