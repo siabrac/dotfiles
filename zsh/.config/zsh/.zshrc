@@ -1,4 +1,3 @@
-
 # Set history options
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
@@ -8,7 +7,7 @@ SAVEHIST=10000
 setopt NO_BEEP
 
 # path
-export PATH="$HOME/dotfiles/bin:$PATH"
+export PATH="$HOME/dotfiles/bin:$HOME/go/bin:$PATH"
 
 # Prompt placeholder
 # PROMPT='%n@%m %1~ %# '
@@ -27,6 +26,6 @@ antidote load
 
 # Start ssh-agent if not running
 if [ -z "$SSH_AUTH_SOCK" ]; then
-  eval "$(ssh-agent -s)"
-  ssh-add ~/.ssh/id_ed25519-siabrac 2>/dev/null
+    eval "$(ssh-agent -s)"
+    ssh-add ~/.ssh/id_ed25519-siabrac 2>/dev/null
 fi
