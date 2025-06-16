@@ -125,6 +125,22 @@ vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
+vim.keymap.set("n", "<leader>rs", function()
+	local bufnr = vim.api.nvim_get_current_buf()
+
+	-- Get all clients attached to this buffer
+	local clients = vim.lsp.get_clients({ bufnr = bufnr })
+
+	for _, client in ipairs(clients) do
+		client:stop() -- graceful stop (non-deprecated)
+	end
+
+	-- Re-edit the buffer to trigger reattach
+	vim.cmd("edit")
+
+	vim.notify("🔁 Restarted LSP for current buffer", vim.log.levels.INFO)
+end, { desc = "[R]estart LSP [S]erver" })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -556,6 +572,9 @@ require("lazy").setup({
 					then
 						map("<leader>th", function()
 							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+							local msg = vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }) and "Inlay hints ON"
+								or "Inlay hints OFF"
+							vim.notify(msg, vim.log.levels.INFO, { title = "LSP" })
 						end, "[T]oggle Inlay [H]ints")
 					end
 				end,
@@ -736,12 +755,12 @@ require("lazy").setup({
 					-- `friendly-snippets` contains a variety of premade snippets.
 					--    See the README about individual language/framework/plugin snippets:
 					--    https://github.com/rafamadriz/friendly-snippets
-					-- {
-					--   'rafamadriz/friendly-snippets',
-					--   config = function()
-					--     require('luasnip.loaders.from_vscode').lazy_load()
-					--   end,
-					-- },
+					{
+						"rafamadriz/friendly-snippets",
+						config = function()
+							require("luasnip.loaders.from_vscode").lazy_load()
+						end,
+					},
 				},
 				opts = {},
 			},
@@ -966,40 +985,69 @@ require("lazy").setup({
 		},
 	},
 	{
-		"mfussenegger/nvim-dap",
+		"leoluz/nvim-dap-go",
 		dependencies = {
+			"mfussenegger/nvim-dap",
 			"nvim-neotest/nvim-nio",
 			"rcarriga/nvim-dap-ui", -- Optional: UI for debugging
 			"theHamsta/nvim-dap-virtual-text", -- Optional: inline variable display
 		},
+		ft = "go",
 		config = function()
-			require("dapui").setup()
-			require("nvim-dap-virtual-text").setup()
+			local dap, dapui = require("dap"), require("dapui")
+			local dapgo = require("dap-go")
+			dapui.setup()
+			dapgo.setup()
+			dap.listeners.before.attach.dapui_config = function()
+				dapui.open()
+			end
+			dap.listeners.before.launch.dapui_config = function()
+				dapui.open()
+			end
 
-			local dap = require("dap")
+			-- Include the next few lines until the comment only if you feel you need it
+			dap.listeners.before.event_terminated.dapui_config = function()
+				dapui.close()
+			end
+			dap.listeners.before.event_exited.dapui_config = function()
+				dapui.close()
+			end
+			-- Include everything after this
 
-			-- ✅ Go adapter
-			dap.adapters.go = {
-				type = "executable",
-				command = "dlv",
-				args = { "dap" },
-			}
+			vim.keymap.set("n", "<F5>", function()
+				require("dap").continue()
+			end)
+			vim.keymap.set("n", "<F10>", function()
+				require("dap").step_over()
+			end)
+			vim.keymap.set("n", "<F11>", function()
+				require("dap").step_into()
+			end)
+			vim.keymap.set("n", "<F12>", function()
+				require("dap").step_out()
+			end)
+			vim.keymap.set("n", "<Leader>b", function()
+				require("dap").toggle_breakpoint()
+			end)
+			vim.keymap.set("n", "<Leader>B", function()
+				require("dap").set_breakpoint()
+			end)
+			vim.keymap.set("n", "<Leader>lp", function()
+				require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+			end)
+			vim.keymap.set("n", "<Leader>dr", function()
+				require("dap").repl.open()
+			end)
+			vim.keymap.set("n", "<Leader>dl", function()
+				require("dap").run_last()
+			end)
 
-			dap.configurations.go = {
-				{
-					type = "go",
-					name = "Debug file",
-					request = "launch",
-					program = "${file}",
-				},
-			}
-
-			-- Optional: keybindings here too
-			vim.keymap.set("n", "<F5>", dap.continue)
-			vim.keymap.set("n", "<F10>", dap.step_over)
-			vim.keymap.set("n", "<F11>", dap.step_into)
-			vim.keymap.set("n", "<F12>", dap.step_out)
-			vim.keymap.set("n", "<leader>b", dap.toggle_breakpoint)
+			vim.keymap.set("n", "<Leader>w", function()
+				dapui.open()
+			end)
+			vim.keymap.set("n", "<Leader>W", function()
+				dapui.close()
+			end)
 		end,
 	},
 	-- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
