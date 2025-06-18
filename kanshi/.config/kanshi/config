@@ -1,0 +1,6 @@
+profile {
+  output eDP-1 mode 1920x1080 position 0,0
+  output "Iiyama North America PL2792UH 1166393201536" mode 3840x2160 position 1920,-1080
+  output "Iiyama North America PL2792UH 1166393501278" mode 3840x2160 position 5760,-1080
+}
+
